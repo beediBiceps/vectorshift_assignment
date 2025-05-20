@@ -13,6 +13,10 @@ from integrations.integration_item import IntegrationItem
 from redis_client import add_key_value_redis, get_value_redis, delete_key_redis
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 CLIENT_ID = os.getenv('NOTION_CLIENT_ID')
 CLIENT_SECRET = os.getenv('NOTION_CLIENT_SECRET')
 encoded_client_id_secret = base64.b64encode(f'{CLIENT_ID}:{CLIENT_SECRET}'.encode()).decode()
@@ -83,7 +87,6 @@ async def get_notion_credentials(user_id, org_id):
     if not credentials:
         raise HTTPException(status_code=400, detail='No credentials found.')
     await delete_key_redis(f'notion_credentials:{org_id}:{user_id}')
-
     return credentials
 
 def _recursive_dict_search(data, target_key):
@@ -146,7 +149,6 @@ async def get_items_notion(credentials) -> list[IntegrationItem]:
             'Notion-Version': '2022-06-28',
         },
     )
-
     if response.status_code == 200:
         results = response.json()['results']
         list_of_integration_item_metadata = []
@@ -154,6 +156,5 @@ async def get_items_notion(credentials) -> list[IntegrationItem]:
             list_of_integration_item_metadata.append(
                 create_integration_item_metadata_object(result)
             )
-
-    return list_of_integration_item_metadata
+        return list_of_integration_item_metadata
     

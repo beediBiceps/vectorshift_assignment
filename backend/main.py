@@ -1,11 +1,13 @@
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from integrations.airtable import authorize_airtable, get_items_airtable, oauth2callback_airtable, get_airtable_credentials
 from integrations.notion import authorize_notion, get_items_notion, oauth2callback_notion, get_notion_credentials
-from integrations.hubspot import authorize_hubspot, get_hubspot_credentials, get_items_hubspot, oauth2callback_hubspot
+from integrations.hubspot import authorize_hubspot, get_hubspot_credentials, get_items_hubspot, oauth2callback_hubspot, invalidate_hubspot_cache
 
 app = FastAPI()
+
+router = APIRouter()
 
 origins = [
     "http://localhost:3000",  # React app address
@@ -73,5 +75,10 @@ async def get_hubspot_credentials_integration(user_id: str = Form(...), org_id: 
     return await get_hubspot_credentials(user_id, org_id)
 
 @app.post('/integrations/hubspot/load')
-async def load_hubspot_data(credentials: str = Form(...)):
+async def get_hubspot_items(credentials: str = Form(...)):
     return await get_items_hubspot(credentials)
+
+@app.post('/webhook')
+async def webhook(request: Request):
+    print("webhook received")
+    await invalidate_hubspot_cache(request)

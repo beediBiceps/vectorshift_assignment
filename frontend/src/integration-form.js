@@ -4,6 +4,7 @@ import { AirtableIntegration } from "./integrations/airtable";
 import { NotionIntegration } from "./integrations/notion";
 import { HubspotIntegration } from "./integrations/hubspot";
 import { DataForm } from "./data-form";
+import { useCredentials } from "./context/CredentialsContext";
 
 const integrationMapping = {
   Notion: NotionIntegration,
@@ -12,10 +13,10 @@ const integrationMapping = {
 };
 
 export const IntegrationForm = () => {
-  const [integrationParams, setIntegrationParams] = useState({});
   const [user, setUser] = useState("TestUser");
   const [org, setOrg] = useState("TestOrg");
   const [currType, setCurrType] = useState(null);
+  const { credentials } = useCredentials();
   const CurrIntegration = integrationMapping[currType];
 
   return (
@@ -47,24 +48,20 @@ export const IntegrationForm = () => {
             <TextField {...params} label="Integration Type" />
           )}
           onChange={(e, value) => setCurrType(value)}
+          value={currType}
         />
       </Box>
       {currType && (
         <Box>
-          <CurrIntegration
-            user={user}
-            org={org}
-            integrationParams={integrationParams}
-            setIntegrationParams={setIntegrationParams}
-          />
-        </Box>
-      )}
-      {integrationParams?.credentials && (
-        <Box sx={{ mt: 2 }}>
-          <DataForm
-            integrationType={integrationParams?.type}
-            credentials={integrationParams?.credentials}
-          />
+          <CurrIntegration user={user} org={org} />
+          {credentials[currType] && (
+            <Box sx={{ mt: 2 }}>
+              <DataForm
+                integrationType={currType}
+                credentials={credentials[currType]}
+              />
+            </Box>
+          )}
         </Box>
       )}
     </Box>

@@ -1,6 +1,17 @@
-import { useState } from "react";
-import { Box, TextField, Button } from "@mui/material";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
 import axios from "axios";
+import {
+  Refresh as RefreshIcon,
+  Clear as ClearIcon,
+} from "@mui/icons-material";
 
 const endpointMapping = {
   Notion: "notion",
@@ -10,10 +21,14 @@ const endpointMapping = {
 
 export const DataForm = ({ integrationType, credentials }) => {
   const [loadedData, setLoadedData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const endpoint = endpointMapping[integrationType];
 
-  const handleLoad = async () => {
+  const loadData = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const formData = new FormData();
       formData.append("credentials", JSON.stringify(credentials));
       const response = await axios.post(
@@ -21,40 +36,82 @@ export const DataForm = ({ integrationType, credentials }) => {
         formData
       );
       const data = response.data;
-      const dataString = JSON.stringify(data);
-      setLoadedData(dataString);
+      const formattedData = JSON.stringify(data, null, 2);
+      setLoadedData(formattedData);
     } catch (e) {
-      alert(e?.response?.data?.detail);
+      setError(e?.response?.data?.detail || "Failed to load data");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Load data automatically when integration type changes or credentials update
+  useEffect(() => {
+    if (credentials && integrationType) {
+      loadData();
+    }
+  }, [integrationType, credentials]);
+
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      flexDirection="column"
-      width="100%"
+    <Paper
+      elevation={3}
+      sx={{ p: 3, mt: 3, width: "100%", backgroundColor: "#f8f9fa" }}
     >
-      <Box display="flex" flexDirection="column" width="100%">
-        <TextField
-          label="Loaded Data"
-          value={loadedData || ""}
-          sx={{ mt: 2 }}
-          InputLabelProps={{ shrink: true }}
-          disabled
-        />
-        <Button onClick={handleLoad} sx={{ mt: 2 }} variant="contained">
-          Load Data
-        </Button>
-        <Button
-          onClick={() => setLoadedData(null)}
-          sx={{ mt: 1 }}
-          variant="contained"
-        >
-          Clear Data
-        </Button>
+      <Typography variant="h6" gutterBottom>
+        Integration Data
+      </Typography>
+      <Box display="flex" flexDirection="column" gap={2} width="100%">
+        {loading ? (
+          <Box display="flex" justifyContent="center" p={3}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box sx={{ color: "error.main", mb: 2 }}>
+            <Typography color="error">{error}</Typography>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={loadData}
+              sx={{ mt: 1 }}
+            >
+              Retry
+            </Button>
+          </Box>
+        ) : (
+          <>
+            <TextField
+              label="Integration Data"
+              value={loadedData || ""}
+              multiline
+              rows={8}
+              InputProps={{
+                readOnly: true,
+                sx: {
+                  fontFamily: "monospace",
+                  backgroundColor: "#ffffff",
+                },
+              }}
+              sx={{ width: "100%" }}
+            />
+            <Box display="flex" gap={1}>
+              <Button
+                variant="contained"
+                onClick={loadData}
+                startIcon={<RefreshIcon />}
+              >
+                Refresh Data
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setLoadedData(null)}
+                startIcon={<ClearIcon />}
+              >
+                Clear
+              </Button>
+            </Box>
+          </>
+        )}
       </Box>
-    </Box>
+    </Paper>
   );
 };

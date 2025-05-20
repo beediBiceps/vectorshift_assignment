@@ -33,3 +33,22 @@ class IntegrationItem:
         self.delta = delta
         self.drive_id = drive_id
         self.visibility = visibility
+
+    def to_dict(self):
+        """Convert IntegrationItem to a dictionary that can be JSON serialized"""
+        return {
+            'id': self.id,
+            'type': self.type,
+            'directory': self.directory,
+            'parent_path_or_name': self.parent_path_or_name,
+            'parent_id': self.parent_id,
+            'name': self.name,
+            'creation_time': self.creation_time.isoformat() if self.creation_time else None,
+            'last_modified_time': self.last_modified_time.isoformat() if self.last_modified_time else None,
+            'url': self.url,
+            'children': self.children,
+            'mime_type': self.mime_type,
+            'delta': self.delta,
+            'drive_id': self.drive_id,
+            'visibility': self.visibility
+        }

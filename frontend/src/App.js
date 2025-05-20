@@ -1,10 +1,11 @@
-import { IntegrationForm } from './integration-form';
+import { IntegrationForm } from "./integration-form";
+import { CredentialsProvider } from "./context/CredentialsContext";
 
 function App() {
   return (
-    <div>
+    <CredentialsProvider>
       <IntegrationForm />
-    </div>
+    </CredentialsProvider>
   );
 }
 

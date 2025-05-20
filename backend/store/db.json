@@ -1,0 +1,9 @@
+{
+    "hubspot": [
+        {
+            "user_id": "TestUser",
+            "org_id": "TestOrg",
+            "integration_user_id": 80186100
+        }
+    ]
+}
