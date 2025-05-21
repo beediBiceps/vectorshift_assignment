@@ -12,7 +12,6 @@ import os
 from dotenv import load_dotenv
 from store import db
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,6 @@ def get_authorization_url(state: str) -> str:
     Generate HubSpot authorization URL with required scopes
     """
     try:
-        # URL encode the redirect URI and scopes
         encoded_redirect_uri = quote(REDIRECT_URI)
         encoded_scopes = quote(' '.join(REQUIRED_SCOPES))
         
@@ -58,7 +56,7 @@ async def authorize_hubspot(user_id, org_id):
     Initialize HubSpot OAuth flow
     """
     try:
-        # Generate a secure random state
+        
         state_data = {
             'state': secrets.token_urlsafe(32),
             'user_id': user_id,
@@ -101,7 +99,6 @@ async def oauth2callback_hubspot(request: Request):
             logger.error("Invalid state in OAuth callback")
             raise HTTPException(status_code=400, detail='Invalid state')
         
-        logger.info("Saving credentials")
 
         async with httpx.AsyncClient() as client:
             token_response = await client.post(
@@ -121,7 +118,6 @@ async def oauth2callback_hubspot(request: Request):
 
             access_token = token_response.json().get('access_token')
             
-            # Get user info while client is still open
             user_info_response = await client.get(
                 'https://api.hubspot.com/oauth/v1/access-tokens/' + access_token
             )
@@ -180,16 +176,12 @@ async def get_hubspot_credentials(user_id, org_id):
 def create_integration_item_metadata_object(
     response_json: dict,
     item_type: str,
-    parent_id: str = None,
-    parent_name: str = None
 ) -> IntegrationItem:
     """
     Creates an integration metadata object from the HubSpot response
     """
     try:
         item_id = response_json.get('id', '')
-        
-        # Handle different types of HubSpot objects
         if item_type == 'contact':
             name = f"{response_json['properties'].get('firstname', '')} {response_json['properties'].get('lastname', '')}".strip()
             creation_time = datetime.fromisoformat(response_json.get('createdAt', '').replace('Z', '+00:00'))
@@ -205,9 +197,8 @@ def create_integration_item_metadata_object(
             name=name or "Unnamed",
             creation_time=creation_time,
             last_modified_time=last_modified_time,
-            parent_id=parent_id,
-            parent_path_or_name=parent_name,
-            url=f"https://app.hubspot.com/contacts/{response_json.get('id')}" if item_type == 'contact' else None
+            url=f"https://app.hubspot.com/contacts/{response_json.get('id')}",
+            visibility=not response_json.get('properties', {}).get('archived', False)
         )
     except Exception as e:
         logger.error(f"Error creating integration item: {str(e)}")
@@ -262,7 +253,7 @@ async def get_items_hubspot(credentials: str) -> list[IntegrationItem]:
 
                 items_dict = [item.to_dict() for item in list_of_integration_items]
                 await add_key_value_redis(f'hubspot_items:{hubspot_user_id}', json.dumps(items_dict), expire=600)
-                logger.info(f"Successfully fetched {len(list_of_integration_items)} items from HubSpot")
+                logger.info(items_dict)
 
         return list_of_integration_items
     except Exception as e:

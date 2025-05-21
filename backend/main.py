@@ -80,5 +80,4 @@ async def get_hubspot_items(credentials: str = Form(...)):
 
 @app.post('/webhook')
 async def webhook(request: Request):
-    print("webhook received")
     await invalidate_hubspot_cache(request)

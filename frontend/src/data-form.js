@@ -45,13 +45,6 @@ export const DataForm = ({ integrationType, credentials }) => {
     }
   };
 
-  // Load data automatically when integration type changes or credentials update
-  useEffect(() => {
-    if (credentials && integrationType) {
-      loadData();
-    }
-  }, [integrationType, credentials]);
-
   return (
     <Paper
       elevation={3}
@@ -97,14 +90,12 @@ export const DataForm = ({ integrationType, credentials }) => {
               <Button
                 variant="contained"
                 onClick={loadData}
-                startIcon={<RefreshIcon />}
               >
-                Refresh Data
+                Load
               </Button>
               <Button
                 variant="outlined"
                 onClick={() => setLoadedData(null)}
-                startIcon={<ClearIcon />}
               >
                 Clear
               </Button>
